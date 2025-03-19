@@ -1,0 +1,29 @@
+{
+  "name": "node-ephemeris",
+  "version": "1.0.0",
+  "description": "Serverless function for calculating birth charts using Swiss Ephemeris",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && serverless offline",
+    "deploy": "pnpm build && serverless deploy",
+    "test": "jest"
+  },
+  "dependencies": {
+    "swisseph": "^0.5.17"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.147",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^18.19.22",
+    "jest": "^29.7.0",
+    "serverless": "^3.38.0",
+    "serverless-offline": "^14.4.0",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.4.2"
+  }
+}

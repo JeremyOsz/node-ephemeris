@@ -1,0 +1,37 @@
+service: node-ephemeris
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    EPHE_PATH: ${opt:stage, 'dev'} == 'dev' ? './assets/ephe' : '/tmp/ephe'  # Use /tmp in Lambda, local path for dev
+
+custom:
+  serverless-offline:
+    httpPort: 3000
+    host: localhost
+
+functions:
+  calculateChart:
+    handler: dist/index.handler
+    events:
+      - http:
+          path: /chart
+          method: post
+          cors: true
+
+package:
+  patterns:
+    - '!node_modules/**'
+    - '!src/**'
+    - 'dist/**'
+    - 'assets/ephe/**'  # Include ephemeris files
+    - '!.git/**'
+    - '!.vscode/**'
+    - '!__tests__/**'
