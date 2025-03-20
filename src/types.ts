@@ -19,4 +19,6 @@ export interface BirthChart {
   midheaven: number;
   houses: number[];
   planets: PlanetPosition[];
+  latitude: number;
+  longitude: number;
 }

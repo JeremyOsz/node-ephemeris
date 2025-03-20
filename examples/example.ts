@@ -1,18 +1,16 @@
-import { calculateBirthChart } from './chart';
-import { BirthData } from './types';
+import { calculateBirthChart } from '../src/chart';
+import { BirthData } from '../src/types';
 
-// Example birth data
 const birthData: BirthData = {
-  date: '1990-06-15',    // Format: YYYY-MM-DD
-  time: '14:30',         // Format: HH:mm (24-hour)
-  latitude: 40.7128,     // New York City
-  longitude: -74.0060,   // Negative for West, positive for East
-  timezone: -4          // EDT (Eastern Daylight Time)
+  date: '1991-12-10',
+  time: '08:50',
+  latitude: -37.8167,
+  longitude: 144.9667,
+  timezone: 11
 };
 
 try {
   const chart = calculateBirthChart(birthData);
-  
   // Print the results
   console.log('\nBirth Chart Results:');
   console.log('==================');

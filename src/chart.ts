@@ -116,7 +116,9 @@ export function calculateBirthChart(birthData: BirthData): BirthChart {
     ascendant,
     midheaven,
     houses: [...houses.house], // Use spread operator to get all houses
-    planets
+    planets,
+    latitude: birthData.latitude,
+    longitude: birthData.longitude
   };
 }
 
