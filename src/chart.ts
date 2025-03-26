@@ -1,30 +1,11 @@
 import * as swisseph from 'swisseph';
 import { BirthData, BirthChart, PlanetPosition } from './types';
+import { ZODIAC_SIGNS, PLANETS, WHOLE_SIGN_HOUSES, DEGREES_PER_SIGN, getSignByDegree } from './static/astrology';
 
 // Initialize Swiss Ephemeris with ephemeris files path
 // For production, you would need to include ephemeris files in your deployment
 // or use a cloud storage solution to access them
 swisseph.swe_set_ephe_path(process.env.EPHE_PATH || './assets/ephe');
-
-const ZODIAC_SIGNS = [
-  'Aries', 'Taurus', 'Gemini', 'Cancer', 
-  'Leo', 'Virgo', 'Libra', 'Scorpio', 
-  'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
-];
-
-const PLANETS = [
-  { id: swisseph.SE_SUN, name: 'Sun' },
-  { id: swisseph.SE_MOON, name: 'Moon' },
-  { id: swisseph.SE_MERCURY, name: 'Mercury' },
-  { id: swisseph.SE_VENUS, name: 'Venus' },
-  { id: swisseph.SE_MARS, name: 'Mars' },
-  { id: swisseph.SE_JUPITER, name: 'Jupiter' },
-  { id: swisseph.SE_SATURN, name: 'Saturn' },
-  { id: swisseph.SE_URANUS, name: 'Uranus' },
-  { id: swisseph.SE_NEPTUNE, name: 'Neptune' },
-  { id: swisseph.SE_PLUTO, name: 'Pluto' },
-  { id: swisseph.SE_MEAN_NODE, name: 'North Node' }
-];
 
 export function calculateBirthChart(birthData: BirthData): BirthChart {
   // Validate date format and values
@@ -52,32 +33,20 @@ export function calculateBirthChart(birthData: BirthData): BirthChart {
     swisseph.SE_GREG_CAL
   );
   
-  // Try Placidus first, fall back to Porphyry for extreme latitudes
-  let houses = swisseph.swe_houses(
+  // Use Whole Sign system
+  const houseResult = swisseph.swe_houses(
     julianDay,
     birthData.latitude,
     birthData.longitude,
-    'P' // Placidus house system
+    'W' // Whole Sign system
   );
 
-  if ('error' in houses) {
-    // Try Porphyry house system for extreme latitudes
-    houses = swisseph.swe_houses(
-      julianDay,
-      birthData.latitude,
-      birthData.longitude,
-      'O' // Porphyry house system
-    );
-    
-    if ('error' in houses) {
-      throw new Error(`Failed to calculate houses: ${houses.error}`);
-    }
+  if ('error' in houseResult) {
+    throw new Error(`Failed to calculate ascendant: ${houseResult.error}`);
   }
-  
-  // Extract ascendant and midheaven
-  const ascendant = houses.ascendant;
-  const midheaven = houses.mc;
-  
+
+  const ascendant = houseResult.ascendant;
+
   // Calculate planet positions
   const planets: PlanetPosition[] = PLANETS.map(planet => {
     const result = swisseph.swe_calc_ut(julianDay, planet.id, swisseph.SEFLG_SPEED);
@@ -89,24 +58,20 @@ export function calculateBirthChart(birthData: BirthData): BirthChart {
     // Assert the type to handle the union type correctly
     const calcResult = result as { longitude: number; longitudeSpeed: number };
 
-    // Determine zodiac sign
-    const signIndex = Math.floor(calcResult.longitude / 30);
-    const sign = ZODIAC_SIGNS[signIndex];
+    // Determine zodiac sign using the new helper function
+    const sign = getSignByDegree(calcResult.longitude);
     
-    // Determine house
-    let house = 1;
-    for (let i = 1; i <= 12; i++) {
-      const nextHouse = i % 12 + 1;
-      if (isBetween(calcResult.longitude, houses.house[i], houses.house[nextHouse])) {
-        house = i;
-        break;
-      }
-    }
+    // Determine house in Whole Sign system
+    // House 1 starts at the ascendant's sign
+    const ascendantSign = getSignByDegree(ascendant);
+    const ascendantIndex = ZODIAC_SIGNS.findIndex(s => s.name === ascendantSign.name);
+    const planetIndex = ZODIAC_SIGNS.findIndex(s => s.name === sign.name);
+    let house = ((planetIndex - ascendantIndex + 12) % 12) + 1;
     
     return {
       name: planet.name,
       longitude: calcResult.longitude,
-      sign,
+      sign: sign.name,
       house,
       retrograde: calcResult.longitudeSpeed < 0
     };
@@ -114,8 +79,8 @@ export function calculateBirthChart(birthData: BirthData): BirthChart {
   
   return {
     ascendant,
-    midheaven,
-    houses: [...houses.house], // Use spread operator to get all houses
+    midheaven: ascendant + 90, // In Whole Sign, MC is 90° from Ascendant
+    houses: [...WHOLE_SIGN_HOUSES], // Use the static Whole Sign house array
     planets,
     latitude: birthData.latitude,
     longitude: birthData.longitude

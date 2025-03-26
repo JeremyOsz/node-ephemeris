@@ -1,9 +1,10 @@
 import { calculateBirthChart } from '../src/chart';
 import { BirthData } from '../src/types';
 
+
 const birthData: BirthData = {
   date: '1991-12-10',
-  time: '08:50',
+  time: '04:59',
   latitude: -37.8167,
   longitude: 144.9667,
   timezone: 11
